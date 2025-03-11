@@ -1,12 +1,38 @@
-# React + Vite
+# Controle de Validade - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este é o frontend do sistema de controle de produtos com vencimento, desenvolvido com Vite + React.
 
-Currently, two official plugins are available:
+## 🚀 Como executar o projeto
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 1. Clonar o repositório
+```bash
+git clone https://github.com/leoblanski/controle-validade-frontend
+```
 
-## Expanding the ESLint configuration
+### 2. Acessar o diretório do projeto
+```bash
+cd controle-validade-frontend
+```
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 3. Instalar as dependências
+```bash
+npm install
+# ou
+yarn install
+```
+
+### 4. Executar o servidor de desenvolvimento
+```bash
+npm run dev
+# ou
+yarn dev
+```
+
+O projeto estará disponível em: `http://localhost:5173/` (porta padrão do Vite)
+
+## 🛠️ Tecnologias utilizadas
+- **Vite** - Ferramenta de build rápida e leve
+- **React** - Biblioteca JavaScript para construção de interfaces
+- **Docker** - Para gerenciar o ambiente do banco de dados
+
+
