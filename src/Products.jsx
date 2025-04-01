@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 import api from './api';
+import { ClipLoader } from 'react-spinners';
 
 function App() {
-  const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
+
   const [formData, setFormData] = useState({
     id: null,
     name: '',
@@ -15,10 +15,13 @@ function App() {
     quantity: 1
   });
 
+  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [IsEditMode, setIsEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const apiUrl = 'http://localhost/api/products';
 
@@ -94,6 +97,10 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if(isSubmitting) return;
+
+    setIsSubmitting(true);
+
     if (new Date(formData.expiration_date) < new Date(formData.manufacturing_date)) {
       alert('A data de validade não pode ser menor que a data de fabricação.');
       return;
@@ -109,11 +116,14 @@ function App() {
       fetchProducts();
     } catch (error) {
       console.log('Erro ao salvar produto', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Deseja excluir este produto?')) return;
+    
     try {
       await api.delete(`${apiUrl}/${id}`);
       fetchProducts();
@@ -130,10 +140,8 @@ function App() {
 
   return (
     <>
-      {/* Fundo fixo com gradiente */}
       <div className="fixed inset-0 bg-gradient-to-br from-indigo-100 via-white to-blue-200 -z-10" />
 
-      {/* Conteúdo principal */}
       <div className="relative min-h-screen p-4 sm:p-6 md:p-8">
         <div className="bg-white rounded-xl shadow-lg max-w-7xl mx-auto p-6 sm:p-8">
 
@@ -143,7 +151,7 @@ function App() {
               Adicionar Produto
             </button>
           </div>
-
+          
           <div className="flex justify-end mb-4">
             <input
               type="text"
@@ -153,7 +161,7 @@ function App() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-
+          
           <div className="overflow-x-auto rounded-lg shadow mb-6">
             <table className="min-w-full divide-y divide-gray-200 text-sm">
               <thead className="bg-gray-100">
@@ -169,6 +177,15 @@ function App() {
                 </tr>
               </thead>
               <tbody>
+                {loading && (
+                  <tr>
+                    <td colSpan={8} className='py-4 text-center'>
+                      <div className='flex-justify-center'>
+                        <ClipLoader color='#3498db' loading={loading} size={50} />
+                      </div>
+                    </td>
+                  </tr>
+                )}
                 {filteredProducts.map((product) => (
                   <tr className="border-t" key={product.id}>
                     <td className="px-4 py-2">{product.id}</td>
@@ -252,7 +269,7 @@ function App() {
                   </select>
 
                   <div className="flex flex-col sm:flex-row gap-2 justify-between mt-4">
-                    <button type="submit" id="button-b">
+                    <button type="submit" id="button-b" disabled={isSubmitting}>
                       {IsEditMode ? 'Salvar' : 'Cadastrar'}
                     </button>
                     <button type="button" onClick={() => setShowModal(false)} id="button-m">
@@ -263,7 +280,6 @@ function App() {
               </div>
             </div>
           )}
-
         </div>
       </div>
     </>
