@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
@@ -16,15 +16,28 @@ function Categories() {
   const [newCategory, setNewCategory] = useState<{
     name: string;
     description: string;
-  }>({ name: "", description: "" });
+    status: boolean;
+  }>({ name: "", description: "", status: true });
   const [error, setError] = useState({ name: "" });
   const [formSubmit, setFormSubmit] = useState<boolean>(false);
   const [editCategory, setEditCategory] = useState<boolean>(false);
   const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchCategory, setSearchCategory] = useState("");
+  const itemsPage = 10;
 
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  const filteredCategories = categories.filter((category) =>
+    category.name.toLowerCase().includes(searchCategory.toLowerCase())
+  );
+
+  const startIndex = (currentPage - 1) * itemsPage;
+  const endIndex = startIndex + itemsPage;
+  const currentItems = filteredCategories.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredCategories.length / itemsPage);
 
   const fetchCategories = async () => {
     try {
@@ -32,7 +45,7 @@ function Categories() {
       setCategories(response.data);
     } catch (error) {
       console.log("erro");
-    }
+    }""
   };
 
   const handleEdit = async (id: number) => {
@@ -45,9 +58,10 @@ function Categories() {
       setNewCategory({
         name: category.name,
         description: category.description,
+        status: category.status,
       });
     } catch (error) {
-      console.log("errro");
+      console.log("erro");
     }
   };
 
@@ -55,7 +69,7 @@ function Categories() {
     e.preventDefault();
     setFormSubmit(true);
 
-    setNewCategory({ name: "", description: "" });
+    setNewCategory({ name: "", description: "", status: true });
 
     let nameError = "";
 
@@ -73,6 +87,7 @@ function Categories() {
           {
             name: newCategory.name,
             description: newCategory.description,
+            status: newCategory.status,
           }
         );
 
@@ -88,15 +103,23 @@ function Categories() {
         const response = await axios.post("http://localhost/api/categories", {
           name: newCategory.name,
           description: newCategory.description,
+          status: newCategory.status,
         });
 
         setCategories([...categories, response.data]);
       }
 
-      setNewCategory({ name: "", description: "" });
+      setNewCategory({ name: "", description: "", status: true });
     } catch (error) {
       console.error("Erro ao adicionar ou editar categoria");
     }
+  };
+
+  const handleRadioChange = () => {
+    setNewCategory((prevState) => ({
+      ...prevState,
+      status: !prevState.status,
+    }));
   };
 
   return (
@@ -148,12 +171,15 @@ function Categories() {
 
           <div className="flex gap-1 items-center ">
             <input
-              type="radio"
-              name="active"
+              type="checkbox"
+              name="status"
               id="active"
-              className="appearance-none w-4 h-4 border bg-black rounded cursor-pointer"
+              checked={newCategory.status}
+              className=" w-4 h-4 border rounded cursor-pointer appearance-none checked:bg-black "
+              onChange={handleRadioChange}
+          
             />
-            <label htmlFor="">Ativo</label>
+            <label htmlFor="active">Ativo</label>
           </div>
 
           <div className="flex justify-end gap-3">
@@ -167,7 +193,7 @@ function Categories() {
               Cancelar
             </button>
             <button type="submit" className="text-white bg-[#2C2C2C]">
-              {editCategory ? "Salvar" : "Cadastrar"}
+              {editCategory ? "Salvar" : "Cadastrar"} 
             </button>
           </div>
         </form>
@@ -179,7 +205,13 @@ function Categories() {
           <div className="flex justify-end items-center p-2">
             <div className="border rounded p-2 mx-2 ">
               <FontAwesomeIcon icon={faMagnifyingGlass} className="px-4" />
-              <input type="text" placeholder="Buscar" className="px-1 " />
+              <input
+                type="text"
+                placeholder="Buscar"
+                value={searchCategory}
+                onChange={(e) => setSearchCategory(e.target.value)}
+                className="px-1 "
+              />
             </div>
           </div>
 
@@ -187,16 +219,16 @@ function Categories() {
             <thead className="bg-[#FAFAFA]">
               <tr className=" text-left border-t border-b ">
                 <th className="px-4 py-3">ID</th>
-                <th className="px-4 py-3">Nome</th>
+                <th className="px-20 py-3">Nome</th>
                 <th className="px-4 py-3">Descrição</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
-              {categories.map((category) => (
+              {currentItems.map((category) => (
                 <tr key={category.id} className="border-b">
                   <td className="px-4 py-3">{category.id}</td>
-                  <td className="px-4 py-3">{category.name}</td>
+                  <td className="px-20 py-3">{category.name}</td>
                   <td className="px-4 py-3">{category.description}</td>
                   <td className="px-16">
                     <FontAwesomeIcon
@@ -211,10 +243,31 @@ function Categories() {
 
             <tfoot className="text-left">
               <tr>
-                <th className="p-3">Mostrando 1 de 1</th>
+                <th className="p-3">
+                  Mostrando {currentPage} de {totalPages}
+                </th>
               </tr>
             </tfoot>
           </table>
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              className="border-none"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              {"<"} Anterior
+            </button>
+            <button
+              type="button"
+              className="border-none"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Próxima {">"}
+            </button>
+          </div>
         </div>
       </div>
     </main>
