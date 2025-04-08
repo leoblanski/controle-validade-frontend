@@ -1,31 +1,27 @@
-import { useEffect, useState } from 'react'
-import './App.css'
-import axios from 'axios'
 
-function App() {
+import "./index.css";
 
-    const [products, setProducts] = useState([])
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import Categories from "./pages/Categories";
+import Products from "./pages/Products";
+
 
     const fetchProducts = async () => {
         const res = await axios.get('http://localhost/api/products')
         setProducts(res.data)
     }
 
-    useEffect(() => {
-        fetchProducts()
-    }, [])
 
-    return (
-        <>
-            <h1>Products</h1>
-            <ul>
-                {products.length && products.map((product) => (
-                    <li key={product.id}>{product.name}</li>
-                ))}
-            </ul>
-        </>
-    )
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Products />} />
+
+        <Route path="/categories" element={<Categories />} />
+      </Routes>
+    </Router>
+  );
 }
 
-
-export default App
+export default App;
