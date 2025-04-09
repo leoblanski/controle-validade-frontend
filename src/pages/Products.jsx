@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
+import DataTable from '../components/DataTable';
 import api from '../api';
 
 import '../App.css';
@@ -24,6 +26,8 @@ function Products() {
   const [IsEditMode, setIsEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState("");
 
   const apiUrl = 'http://localhost/api/products';
 
@@ -32,12 +36,26 @@ function Products() {
     fetchCategories();
   }, []);
 
+  const handleApiError = (error) => { 
+    if(!error.response) {
+      setErrorMessage('Erro de conexão. Verifique sua internet ou tente mais tarde.');
+      return;
+    }
+
+    const statusMessages = {
+      404: 'Produto não encontrado.',
+      500: 'Erro no servidor. Tente novamente mais tarde.',
+    };
+
+    setErrorMessage(statusMessages[error.response.status] || 'Erro ao processar a solicitação.');
+  };
+
   const fetchCategories = async () => {
     try {
       const response = await api.get('http://localhost/api/categories');
       setCategories(response.data);
     } catch (error) {
-      console.error('Erro ao buscar categorias', error);
+      handleApiError(error);
     }
   };
 
@@ -47,7 +65,7 @@ function Products() {
       const response = await api.get('http://localhost/api/products');
       setProducts(response.data);
     } catch (error) {
-      console.error('Erro ao buscar produtos', error);
+      handleApiError(error);
     } finally {
       setLoading(false);
     }
@@ -117,7 +135,7 @@ function Products() {
       setShowModal(false);
       fetchProducts();
     } catch (error) {
-      console.log('Erro ao salvar produto', error);
+      handleApiError(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -130,7 +148,7 @@ function Products() {
       await api.delete(`${apiUrl}/${id}`);
       fetchProducts();
     } catch (error) {
-      console.error('Erro ao deletar produto', error);
+      handleApiError(error);  
     }
   };
 
@@ -144,10 +162,19 @@ function Products() {
     <>
       <div className="fixed inset-0 bg-gradient-to-br from-indigo-100 via-white to-blue-200 -z-10" />
 
-      <div className="relative min-h-screen p-4 sm:p-6 md:p-8">
+      <main className="relative min-h-screen p-4 sm:p-6 md:p-8">
         <div className="bg-white rounded-xl shadow-lg max-w-7xl mx-auto p-6 sm:p-8">
-
+          {errorMessage && (
+            <div className="bg-red-100 text-red-700 p-3 rounded-lg shadow mb-4 text-center">
+              {errorMessage}
+            </div>
+          )}
           <div className="flex justify-between mb-4">
+            <button onClick={() => navigate('/')}
+              id='button-b'
+              >
+                Voltar ao Menu
+            </button>
             <h2 className="text-xl font-semibold mb-4">Listagem de Produtos</h2>
             <button onClick={openAddModal} id="button-b">
               Adicionar Produto
@@ -236,7 +263,7 @@ function Products() {
                     onChange={handleChange}
                     className="border rounded-lg px-3 py-2 w-full mb-2"
                     required
-                  />
+                    />
                   <input
                     type="date"
                     name="expiration_date"
@@ -269,7 +296,6 @@ function Products() {
                       </option>
                     ))}
                   </select>
-
                   <div className="flex flex-col sm:flex-row gap-2 justify-between mt-4">
                     <button type="submit" id="button-b" disabled={isSubmitting}>
                       {IsEditMode ? 'Salvar' : 'Cadastrar'}
@@ -283,7 +309,7 @@ function Products() {
             </div>
           )}
         </div>
-      </div>
+      </main>
     </>
   );
 }

@@ -1,24 +1,24 @@
 import React, { FormEvent, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
-import axios from "axios";
+import { ClipLoader } from 'react-spinners';
+import api from '../api';
 
 function Categories() {
   const [categories, setCategories] = useState([]);
-  const [newCategory, setNewCategory] = useState([
-    {
-      name: "",
-      description: "",
-      status: true,
-    },
-  ]);
+  const [newCategory, setNewCategory] = useState({ name: "", status: true });
   const [error, setError] = useState({ name: "" });
   const [formSubmit, setFormSubmit] = useState(false);
   const [editCategory, setEditCategory] = useState(false);
   const [categoryId, setCategoryId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchCategory, setSearchCategory] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const navigate = useNavigate();
   const itemsPage = 10;
 
   useEffect(() => {
@@ -34,29 +34,46 @@ function Categories() {
   const currentItems = filteredCategories.slice(startIndex, endIndex);
   const totalPages = Math.ceil(filteredCategories.length / itemsPage);
 
+  const handleApiError = (error) => { 
+    if(!error.response) {
+      setErrorMessage('Erro de conexão. Verifique sua internet ou tente mais tarde.');
+      return;
+    }
+
+    const statusMessages = {
+      404: 'Produto não encontrado.',
+      500: 'Erro no servidor. Tente novamente mais tarde.',
+    };
+
+    setErrorMessage(statusMessages[error.response.status] || 'Erro ao processar a solicitação.');
+  };
+
   const fetchCategories = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get("http://localhost/api/categories");
+      const response = await api.get("http://localhost/api/categories");
       setCategories(response.data);
     } catch (error) {
-      console.log("erro");
-    } ""
+      handleApiError(error);
+    } finally { 
+      setLoading(false);
+    }
   };
 
   const handleEdit = async (id) => {
     setEditCategory(true);
     setCategoryId(id);
+    setIsModalOpen(true);
 
     try {
-      const response = await axios.get(`http://localhost/api/categories/${id}`);
+      const response = await api.get(`http://localhost/api/categories/${id}`);
       const category = response.data;
       setNewCategory({
         name: category.name,
-        description: category.description,
         status: category.status,
       });
     } catch (error) {
-      console.log("erro");
+      handleApiError(error);
     }
   };
 
@@ -64,10 +81,7 @@ function Categories() {
     e.preventDefault();
     setFormSubmit(true);
 
-    setNewCategory({ name: "", description: "", status: true });
-
     let nameError = "";
-
     if (!newCategory.name)
       nameError = "Por favor, informe o nome da categoria.";
 
@@ -77,36 +91,18 @@ function Categories() {
 
     try {
       if (editCategory && categoryId !== null) {
-        const response = await axios.put(
-          `http://localhost/api/categories/${categoryId}`,
-          {
-            name: newCategory.name,
-            description: newCategory.description,
-            status: newCategory.status,
-          }
-        );
-
-        setCategories(
-          categories.map((category) =>
-            category.id === categoryId ? response.data : category
-          )
-        );
-
+        const response = await api.put(`http://localhost/api/categories/${categoryId}`, newCategory);
+        setCategories(categories.map((category) => category.id === categoryId ? response.data : category));
         setEditCategory(false);
         setCategoryId(null);
       } else {
-        const response = await axios.post("http://localhost/api/categories", {
-          name: newCategory.name,
-          description: newCategory.description,
-          status: newCategory.status,
-        });
-
+        const response = await api.post("http://localhost/api/categories", newCategory);
         setCategories([...categories, response.data]);
       }
-
-      setNewCategory({ name: "", description: "", status: true });
+      setNewCategory({ name: "", status: true });
+      setIsModalOpen(false);
     } catch (error) {
-      console.error("Erro ao adicionar ou editar categoria");
+      handleApiError(error);
     }
   };
 
@@ -118,154 +114,163 @@ function Categories() {
   };
 
   return (
-    <main className=" flex flex-col items-center justify-center space-y-8">
-      <div className="bg-[#ffffff] mt-8 py-5 px-6 min-w-[1000px] space-y-2">
-        <h2 className="text-xl">
-          {editCategory ? "Edição de Categorias" : "Cadastro de Categorias"}
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="flex gap-4 justify-between ">
-            <div className="flex flex-col w-full">
-              <label htmlFor="">
-                Nome <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="text"
-                name="category"
-                id="category"
-                value={newCategory.name}
-                autoFocus
-                className="border rounded-lg cursor-pointer p-1"
-                onChange={(e) =>
-                  setNewCategory({ ...newCategory, name: e.target.value })
-                }
-              />
+    <>
+      <div className="fixed inset-0 bg-gradient-to-br from-indigo-100 via-white to-blue-200 -z-10" />
+
+      <main className="relative min-h-screen p-4 sm:p-6 md:p-8">
+        <div className="bg-white rounded-xl shadow-lg max-w-7xl mx-auto p-6 sm:p-8 space-y-8">
+
+          {errorMessage && (
+            <div className="bg-red-100 text-red-700 p-3 rounded-lg shadow mb-4 text-center">
+              {errorMessage}
             </div>
-            <div className="flex flex-col w-full">
-              <label htmlFor="">Descrição</label>
-              <input
-                type="text"
-                name="description"
-                id="description"
-                value={newCategory.description}
-                className="border rounded-lg p-1"
-                onChange={(e) =>
-                  setNewCategory({
-                    ...newCategory,
-                    description: e.target.value,
-                  })
-                }
-              />
-            </div>
-          </div>
-          <div>
-            {formSubmit && error.name && newCategory.name === "" && (
-              <p className="text-xs text-red-600">{error.name}</p>
-            )}
-          </div>
-
-          <div className="flex gap-1 items-center ">
-            <input
-              type="checkbox"
-              name="status"
-              id="active"
-              checked={newCategory.status}
-              className=" w-4 h-4 border rounded cursor-pointer appearance-none checked:bg-black "
-              onChange={handleRadioChange}
-
-            />
-            <label htmlFor="active">Ativo</label>
-          </div>
-
-          <div className="flex justify-end gap-3">
+          )}
+          <div className="flex justify-between items-center">
+            <button onClick={() => navigate('/')} id='button-b'>Voltar ao Menu</button>
+            <h2 className="text-xl font-semibold text-center flex-1">Listagem de Categorias</h2>
             <button
-              type="button"
-              className="text-white bg-[#EC221F]"
-              onClick={(e) =>
-                setNewCategory({ ...newCategory, name: "", description: "" })
-              }
+              onClick={() => {
+                setEditCategory(false);
+                setNewCategory({ name: "", status: true });
+                setIsModalOpen(true);
+              }}
+              id="button-b"
             >
-              Cancelar
-            </button>
-            <button type="submit" className="text-white bg-[#2C2C2C]">
-              {editCategory ? "Salvar" : "Cadastrar"}
+              Adicionar Categoria
             </button>
           </div>
-        </form>
-      </div>
 
-      <div className="bg-[#ffffff] mt-8 py-5 px-6  min-w-[1000px] space-y-2">
-        <h2 className="text-xl pb-10">Listagem de Categorias</h2>
-        <div className="border rounded-lg">
-          <div className="flex justify-end items-center p-2">
-            <div className="border rounded p-2 mx-2 ">
-              <FontAwesomeIcon icon={faMagnifyingGlass} className="px-4" />
-              <input
-                type="text"
-                placeholder="Buscar"
-                value={searchCategory}
-                onChange={(e) => setSearchCategory(e.target.value)}
-                className="px-1 "
-              />
-            </div>
-          </div>
+          {isModalOpen && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
+              <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-2xl relative">
+                <h2 className="text-xl font-semibold mb-4">
+                  {editCategory ? "Edição de Categorias" : "Cadastro de Categorias"}
+                </h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex flex-col w-full">
+                      <label htmlFor="category" className="mb-1 font-medium">
+                        Nome <span className="text-red-600">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="category"
+                        id="category"
+                        value={newCategory.name}
+                        autoFocus
+                        className="border rounded-lg px-3 py-2 w-full shadow-sm focus:ring focus:ring-gray-300"
+                        onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
 
-          <table className="w-full">
-            <thead className="bg-[#FAFAFA]">
-              <tr className=" text-left border-t border-b ">
-                <th className="px-4 py-3">ID</th>
-                <th className="px-20 py-3">Nome</th>
-                <th className="px-4 py-3">Descrição</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentItems.map((category) => (
-                <tr key={category.id} className="border-b">
-                  <td className="px-4 py-3">{category.id}</td>
-                  <td className="px-20 py-3">{category.name}</td>
-                  <td className="px-4 py-3">{category.description}</td>
-                  <td className="px-16">
-                    <FontAwesomeIcon
-                      icon={faPenToSquare}
-                      className="cursor-pointer"
-                      onClick={() => handleEdit(category.id)}
+                  {formSubmit && error.name && newCategory.name === "" && (
+                    <p className="text-xs text-red-600">{error.name}</p>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      name="status"
+                      id="active"
+                      checked={newCategory.status}
+                      className="w-4 h-4 border rounded cursor-pointer appearance-none checked:bg-black"
+                      onChange={handleRadioChange}
                     />
-                  </td>
+                    <label htmlFor="active">Ativo</label>
+                  </div>
+
+                  <div className="flex justify-end gap-3">
+                    <button type="button" id="button-m" onClick={() => setIsModalOpen(false)}>
+                      Cancelar
+                    </button>
+                    <button type="submit" id="button-b">
+                      {editCategory ? "Salvar" : "Cadastrar"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          <div className="rounded-lg shadow">
+            <div className="flex justify-end p-4">
+              <div className="border rounded-lg flex items-center px-3 py-1 shadow-sm">
+                <FontAwesomeIcon icon={faMagnifyingGlass} className="mr-2 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Buscar"
+                  value={searchCategory}
+                  onChange={(e) => setSearchCategory(e.target.value)}
+                  className="outline-none"
+                />
+              </div>
+            </div>
+
+            <table className="min-w-full divide-y divide-gray-200 text-sm">
+              <thead className="bg-gray-100">
+                <tr className="text-left">
+                  <th className="px-4 py-3 text-center w-20">ID</th>
+                  <th className="px-6 py-3 text-center w-48">Nome</th>
+                  <th className="px-4 py-3 text-center w-20">Ações</th>
                 </tr>
-              ))}
-            </tbody>
+              </thead>
+              <tbody>
+              {loading && (
+                  <tr>
+                    <td colSpan={8} className='py-4 text-center'>
+                      <div className='flex-justify-center'>
+                        <ClipLoader color='#3498db' loading={loading} size={50} />
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                {currentItems.map((category) => (
+                  <tr key={category.id} className="hover:bg-gray-50 text-center">
+                    <td className="px-4 py-3 text-center">{category.id}</td>
+                    <td className="px-6 py-3 text-center">{category.name}</td>
+                    <td className="px-4 py-3 text-center">
+                      <FontAwesomeIcon
+                        icon={faPenToSquare}
+                        className="cursor-pointer text-gray-600 hover:text-indigo-600"
+                        onClick={() => handleEdit(category.id)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="text-left">
+                <tr>
+                  <th className="p-3 text-sm font-normal">
+                    Mostrando {currentPage} de {totalPages}
+                  </th>
+                </tr>
+              </tfoot>
+            </table>
 
-            <tfoot className="text-left">
-              <tr>
-                <th className="p-3">
-                  Mostrando {currentPage} de {totalPages}
-                </th>
-              </tr>
-            </tfoot>
-          </table>
-
-          <div className="flex justify-end">
-            <button
-              type="button"
-              className="border-none"
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              {"<"} Anterior
-            </button>
-            <button
-              type="button"
-              className="border-none"
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Próxima {">"}
-            </button>
+            <div className="flex justify-end gap-4 p-4">
+              <button
+                type="button"
+                id="button-b"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                {"<"} Anterior
+              </button>
+              <button
+                type="button"
+                id="button-b"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Próxima {">"}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }
 
