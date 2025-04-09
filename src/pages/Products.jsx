@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import './App.css';
-import api from './api';
 import { ClipLoader } from 'react-spinners';
+import api from '../api';
 
-function App() {
+import '../App.css';
+
+
+function Products() {
 
   const [formData, setFormData] = useState({
     id: null,
@@ -97,7 +99,7 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if(isSubmitting) return;
+    if (isSubmitting) return;
 
     setIsSubmitting(true);
 
@@ -123,7 +125,7 @@ function App() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Deseja excluir este produto?')) return;
-    
+
     try {
       await api.delete(`${apiUrl}/${id}`);
       fetchProducts();
@@ -151,7 +153,7 @@ function App() {
               Adicionar Produto
             </button>
           </div>
-          
+
           <div className="flex justify-end mb-4">
             <input
               type="text"
@@ -161,7 +163,7 @@ function App() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
+
           <div className="overflow-x-auto rounded-lg shadow mb-6">
             <table className="min-w-full divide-y divide-gray-200 text-sm">
               <thead className="bg-gray-100">
@@ -286,4 +288,4 @@ function App() {
   );
 }
 
-export default App;
+export default Products;

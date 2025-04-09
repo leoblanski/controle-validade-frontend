@@ -4,24 +4,19 @@ import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 
-interface Category {
-  id: number;
-  name: string;
-  description: string;
-  status: boolean;
-}
-
 function Categories() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [newCategory, setNewCategory] = useState<{
-    name: string;
-    description: string;
-    status: boolean;
-  }>({ name: "", description: "", status: true });
+  const [categories, setCategories] = useState([]);
+  const [newCategory, setNewCategory] = useState([
+    {
+      name: "",
+      description: "",
+      status: true,
+    },
+  ]);
   const [error, setError] = useState({ name: "" });
-  const [formSubmit, setFormSubmit] = useState<boolean>(false);
-  const [editCategory, setEditCategory] = useState<boolean>(false);
-  const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [formSubmit, setFormSubmit] = useState(false);
+  const [editCategory, setEditCategory] = useState(false);
+  const [categoryId, setCategoryId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchCategory, setSearchCategory] = useState("");
   const itemsPage = 10;
@@ -45,10 +40,10 @@ function Categories() {
       setCategories(response.data);
     } catch (error) {
       console.log("erro");
-    }""
+    } ""
   };
 
-  const handleEdit = async (id: number) => {
+  const handleEdit = async (id) => {
     setEditCategory(true);
     setCategoryId(id);
 
@@ -65,7 +60,7 @@ function Categories() {
     }
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setFormSubmit(true);
 
@@ -177,7 +172,7 @@ function Categories() {
               checked={newCategory.status}
               className=" w-4 h-4 border rounded cursor-pointer appearance-none checked:bg-black "
               onChange={handleRadioChange}
-          
+
             />
             <label htmlFor="active">Ativo</label>
           </div>
@@ -193,7 +188,7 @@ function Categories() {
               Cancelar
             </button>
             <button type="submit" className="text-white bg-[#2C2C2C]">
-              {editCategory ? "Salvar" : "Cadastrar"} 
+              {editCategory ? "Salvar" : "Cadastrar"}
             </button>
           </div>
         </form>
