@@ -3,7 +3,7 @@ import { FaBox, FaTags } from "react-icons/fa";
 
 function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center px-4">
+    <div className="fixed inset-0 bg-gradient-to-br from-indigo-100 via-white to-blue-200 -z-10 flex items-center justify-center min-h-screen">
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-10 text-gray-800">Controle de Validade</h1>
 
