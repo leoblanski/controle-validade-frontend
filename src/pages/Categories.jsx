@@ -5,6 +5,8 @@ import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 import { ClipLoader } from 'react-spinners';
 import api from '../api';
+import Input from "../components/Input";
+import DataTable from "../components/DataTable";
 
 function Categories() {
   const [categories, setCategories] = useState([]);
@@ -21,6 +23,12 @@ function Categories() {
   const navigate = useNavigate();
   const itemsPage = 10;
 
+
+  const columns = [
+    { key: "id", header: "ID", type: "badge" },
+    { key: "name", header: "Nome" },
+  ];
+
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -34,8 +42,8 @@ function Categories() {
   const currentItems = filteredCategories.slice(startIndex, endIndex);
   const totalPages = Math.ceil(filteredCategories.length / itemsPage);
 
-  const handleApiError = (error) => { 
-    if(!error.response) {
+  const handleApiError = (error) => {
+    if (!error.response) {
       setErrorMessage('Erro de conexão. Verifique sua internet ou tente mais tarde.');
       return;
     }
@@ -55,7 +63,7 @@ function Categories() {
       setCategories(response.data);
     } catch (error) {
       handleApiError(error);
-    } finally { 
+    } finally {
       setLoading(false);
     }
   };
@@ -148,21 +156,16 @@ function Categories() {
                 </h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="flex flex-col w-full">
-                      <label htmlFor="category" className="mb-1 font-medium">
-                        Nome <span className="text-red-600">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="category"
-                        id="category"
-                        value={newCategory.name}
-                        autoFocus
-                        className="border rounded-lg px-3 py-2 w-full shadow-sm focus:ring focus:ring-gray-300"
-                        onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
-                        required
-                      />
-                    </div>
+                    <Input
+                      label="Nome"
+                      name="category"
+                      id="category"
+                      type="text"
+                      value={newCategory.name}
+                      autoFocus
+                      onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                      required
+                    />
                   </div>
 
                   {formSubmit && error.name && newCategory.name === "" && (
@@ -208,46 +211,12 @@ function Categories() {
               </div>
             </div>
 
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-100">
-                <tr className="text-left">
-                  <th className="px-4 py-3 text-center w-20">ID</th>
-                  <th className="px-6 py-3 text-center w-48">Nome</th>
-                  <th className="px-4 py-3 text-center w-20">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-              {loading && (
-                  <tr>
-                    <td colSpan={8} className='py-4 text-center'>
-                      <div className='flex-justify-center'>
-                        <ClipLoader color='#3498db' loading={loading} size={50} />
-                      </div>
-                    </td>
-                  </tr>
-                )}
-                {currentItems.map((category) => (
-                  <tr key={category.id} className="hover:bg-gray-50 text-center">
-                    <td className="px-4 py-3 text-center">{category.id}</td>
-                    <td className="px-6 py-3 text-center">{category.name}</td>
-                    <td className="px-4 py-3 text-center">
-                      <FontAwesomeIcon
-                        icon={faPenToSquare}
-                        className="cursor-pointer text-gray-600 hover:text-indigo-600"
-                        onClick={() => handleEdit(category.id)}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot className="text-left">
-                <tr>
-                  <th className="p-3 text-sm font-normal">
-                    Mostrando {currentPage} de {totalPages}
-                  </th>
-                </tr>
-              </tfoot>
-            </table>
+            <DataTable
+              columns={columns}
+              data={currentItems}
+              loading={loading}
+              onEdit={(category) => handleEdit(category.id)}
+            />
 
             <div className="flex justify-end gap-4 p-4">
               <button
