@@ -191,48 +191,32 @@ function Products() {
             />
           </div>
 
-          <div className="overflow-x-auto rounded-lg shadow mb-6">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-4 py-2 text-center">ID</th>
-                  <th className="px-4 py-2 text-center">Nome</th>
-                  <th className="px-4 py-2 text-center">Descrição</th>
-                  <th className="px-4 py-2 text-center">Fabricação</th>
-                  <th className="px-4 py-2 text-center">Validade</th>
-                  <th className="px-4 py-2 text-center">Quantidade</th>
-                  <th className="px-4 py-2 text-center">Categoria</th>
-                  <th className="px-4 py-2 text-center">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading && (
-                  <tr>
-                    <td colSpan={8} className='py-4 text-center'>
-                      <div className='flex-justify-center'>
-                        <ClipLoader color='#3498db' loading={loading} size={50} />
-                      </div>
-                    </td>
-                  </tr>
-                )}
-                {filteredProducts.map((product) => (
-                  <tr className="border-t" key={product.id}>
-                    <td className="px-4 py-2">{product.id}</td>
-                    <td className="px-4 py-2">{product.name}</td>
-                    <td className="px-4 py-2">{product.description}</td>
-                    <td className="px-4 py-2">{product.manufacturing_date}</td>
-                    <td className="px-4 py-2">{product.expiration_date}</td>
-                    <td className="px-4 py-2">{product.quantity}</td>
-                    <td className="px-4 py-2">{product.category?.name || 'Sem categoria'}</td>
-                    <td className="px-4 py-2 flex flex-col sm:flex-row gap-2 items-center justify-center">
-                      <button onClick={() => handleEdit(product)} id="button-b">Editar</button>
-                      <button onClick={() => handleDelete(product.id)} id="button-m">Excluir</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+
+            columns={[
+              { key: 
+                'index', 
+                header: 'ID',
+                render: (_row, index) => index +1,
+              },
+              { key: 'name', header: 'Nome' },
+              { key: 'description', header: 'Descrição' },
+              { key: 'manufacturing_date', header: 'Fabricação' },
+              { key: 'expiration_date', header: 'Validade' },
+              { key: 'quantity', header: 'Quantidade' },
+              { 
+                key: 'category.name', 
+                header: 'Categoria',
+                render: (row) => row.category?.name || 'Sem Categoria'
+              },
+            ]}
+            data= {filteredProducts}	
+            loading={loading}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+            
+
 
           {showModal && (
             <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-10">

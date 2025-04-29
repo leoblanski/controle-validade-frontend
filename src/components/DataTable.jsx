@@ -23,11 +23,11 @@ function DataTable({ columns, data, loading, onEdit, onDelete }) {
               </td>
             </tr>
           ) : (
-            data.map((row) => (
+            data.map((row, index) => (
               <tr key={row.id} className="border-t w-20">
                 {columns.map((col) => (
                   <td key={col.key} className="px-4 py-2 text-center w-48">
-                    {col.render ? col.render(row[col.key], row) : row[col.key]}
+                    {col.render ? col.render(row, index) : row[col.key]}
                   </td>
                 ))}
                 {(onEdit || onDelete) && (
