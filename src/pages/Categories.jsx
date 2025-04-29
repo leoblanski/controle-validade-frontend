@@ -2,7 +2,6 @@ import React, { FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
-
 import { ClipLoader } from "react-spinners";
 import api from "../api";
 import Input from "../components/Input";
@@ -150,6 +149,12 @@ function Categories() {
           currentPage={currentPage}
           totalPages={totalPages}
           navigate={navigate}
+          pageTitle="Categorias"
+          backButton={"Voltar ao menu"}
+          addButton={"Adicionar Categoria"}
+          nextPage={"Próxima"}
+          backPage={"Anterior"}
+
         >
           {errorMessage && (
             <div className="bg-red-100 text-red-700 p-3 rounded-lg shadow mb-4 text-center">

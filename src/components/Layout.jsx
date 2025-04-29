@@ -12,16 +12,20 @@ export default function Layout({
   currentPage,
   totalPages,
   navigate,
-
+  pageTitle,
+  backButton,
+  addButton,
+  nextPage,
+  backPage,
 }) {
   return (
     <div>
       <div className="flex justify-between items-center">
         <button onClick={() => navigate("/")} id="button-b">
-          Voltar ao Menu
+          {backButton}
         </button>
         <h2 className="text-xl font-semibold text-center flex-1">
-          Listagem de Categorias
+          {pageTitle}
         </h2>
         <button
           onClick={() => {
@@ -31,7 +35,7 @@ export default function Layout({
           }}
           id="button-b"
         >
-          Adicionar Categoria
+          {addButton}
         </button>
       </div>
 
@@ -60,7 +64,7 @@ export default function Layout({
           onClick={() => setCurrentPage(currentPage - 1)}
           disabled={currentPage === 1}
         >
-          {"<"} Anterior
+          {"<"} {backPage}
         </button>
         <button
           type="button"
@@ -68,7 +72,7 @@ export default function Layout({
           onClick={() => setCurrentPage(currentPage + 1)}
           disabled={currentPage === totalPages}
         >
-          Próxima {">"}
+          {nextPage} {">"}
         </button>
       </div>
     </div>
