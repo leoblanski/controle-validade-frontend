@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import './App.css';
-import api from './api';
+import { useNavigate } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
+import DataTable from '../components/DataTable';
+import api from '../api';
 
-function App() {
+import '../App.css';
+
+
+function Products() {
 
   const [formData, setFormData] = useState({
     id: null,
@@ -22,6 +26,8 @@ function App() {
   const [IsEditMode, setIsEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState("");
 
   const apiUrl = 'http://localhost/api/products';
 
@@ -30,12 +36,26 @@ function App() {
     fetchCategories();
   }, []);
 
+  const handleApiError = (error) => { 
+    if(!error.response) {
+      setErrorMessage('Erro de conexão. Verifique sua internet ou tente mais tarde.');
+      return;
+    }
+
+    const statusMessages = {
+      404: 'Produto não encontrado.',
+      500: 'Erro no servidor. Tente novamente mais tarde.',
+    };
+
+    setErrorMessage(statusMessages[error.response.status] || 'Erro ao processar a solicitação.');
+  };
+
   const fetchCategories = async () => {
     try {
       const response = await api.get('http://localhost/api/categories');
       setCategories(response.data);
     } catch (error) {
-      console.error('Erro ao buscar categorias', error);
+      handleApiError(error);
     }
   };
 
@@ -45,7 +65,7 @@ function App() {
       const response = await api.get('http://localhost/api/products');
       setProducts(response.data);
     } catch (error) {
-      console.error('Erro ao buscar produtos', error);
+      handleApiError(error);
     } finally {
       setLoading(false);
     }
@@ -97,7 +117,7 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if(isSubmitting) return;
+    if (isSubmitting) return;
 
     setIsSubmitting(true);
 
@@ -115,7 +135,7 @@ function App() {
       setShowModal(false);
       fetchProducts();
     } catch (error) {
-      console.log('Erro ao salvar produto', error);
+      handleApiError(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -123,12 +143,12 @@ function App() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Deseja excluir este produto?')) return;
-    
+
     try {
       await api.delete(`${apiUrl}/${id}`);
       fetchProducts();
     } catch (error) {
-      console.error('Erro ao deletar produto', error);
+      handleApiError(error);  
     }
   };
 
@@ -142,16 +162,25 @@ function App() {
     <>
       <div className="fixed inset-0 bg-gradient-to-br from-indigo-100 via-white to-blue-200 -z-10" />
 
-      <div className="relative min-h-screen p-4 sm:p-6 md:p-8">
+      <main className="relative min-h-screen p-4 sm:p-6 md:p-8">
         <div className="bg-white rounded-xl shadow-lg max-w-7xl mx-auto p-6 sm:p-8">
-
+          {errorMessage && (
+            <div className="bg-red-100 text-red-700 p-3 rounded-lg shadow mb-4 text-center">
+              {errorMessage}
+            </div>
+          )}
           <div className="flex justify-between mb-4">
+            <button onClick={() => navigate('/')}
+              id='button-b'
+              >
+                Voltar ao Menu
+            </button>
             <h2 className="text-xl font-semibold mb-4">Listagem de Produtos</h2>
             <button onClick={openAddModal} id="button-b">
               Adicionar Produto
             </button>
           </div>
-          
+
           <div className="flex justify-end mb-4">
             <input
               type="text"
@@ -161,49 +190,33 @@ function App() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
-          <div className="overflow-x-auto rounded-lg shadow mb-6">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-4 py-2 text-center">ID</th>
-                  <th className="px-4 py-2 text-center">Nome</th>
-                  <th className="px-4 py-2 text-center">Descrição</th>
-                  <th className="px-4 py-2 text-center">Fabricação</th>
-                  <th className="px-4 py-2 text-center">Validade</th>
-                  <th className="px-4 py-2 text-center">Quantidade</th>
-                  <th className="px-4 py-2 text-center">Categoria</th>
-                  <th className="px-4 py-2 text-center">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading && (
-                  <tr>
-                    <td colSpan={8} className='py-4 text-center'>
-                      <div className='flex-justify-center'>
-                        <ClipLoader color='#3498db' loading={loading} size={50} />
-                      </div>
-                    </td>
-                  </tr>
-                )}
-                {filteredProducts.map((product) => (
-                  <tr className="border-t" key={product.id}>
-                    <td className="px-4 py-2">{product.id}</td>
-                    <td className="px-4 py-2">{product.name}</td>
-                    <td className="px-4 py-2">{product.description}</td>
-                    <td className="px-4 py-2">{product.manufacturing_date}</td>
-                    <td className="px-4 py-2">{product.expiration_date}</td>
-                    <td className="px-4 py-2">{product.quantity}</td>
-                    <td className="px-4 py-2">{product.category?.name || 'Sem categoria'}</td>
-                    <td className="px-4 py-2 flex flex-col sm:flex-row gap-2 items-center justify-center">
-                      <button onClick={() => handleEdit(product)} id="button-b">Editar</button>
-                      <button onClick={() => handleDelete(product.id)} id="button-m">Excluir</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+
+          <DataTable
+
+            columns={[
+              { key: 
+                'index', 
+                header: 'ID',
+                render: (_row, index) => index +1,
+              },
+              { key: 'name', header: 'Nome' },
+              { key: 'description', header: 'Descrição' },
+              { key: 'manufacturing_date', header: 'Fabricação' },
+              { key: 'expiration_date', header: 'Validade' },
+              { key: 'quantity', header: 'Quantidade' },
+              { 
+                key: 'category.name', 
+                header: 'Categoria',
+                render: (row) => row.category?.name || 'Sem Categoria'
+              },
+            ]}
+            data= {filteredProducts}	
+            loading={loading}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+            
+
 
           {showModal && (
             <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-10">
@@ -234,7 +247,7 @@ function App() {
                     onChange={handleChange}
                     className="border rounded-lg px-3 py-2 w-full mb-2"
                     required
-                  />
+                    />
                   <input
                     type="date"
                     name="expiration_date"
@@ -267,7 +280,6 @@ function App() {
                       </option>
                     ))}
                   </select>
-
                   <div className="flex flex-col sm:flex-row gap-2 justify-between mt-4">
                     <button type="submit" id="button-b" disabled={isSubmitting}>
                       {IsEditMode ? 'Salvar' : 'Cadastrar'}
@@ -281,9 +293,9 @@ function App() {
             </div>
           )}
         </div>
-      </div>
+      </main>
     </>
   );
 }
 
-export default App;
+export default Products;
