@@ -2,21 +2,15 @@
 import "./index.css";
 
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Categories from "./pages/Categories";
 import Products from "./pages/Products";
-
-
-// const fetchProducts = async () => {
-//     const res = await axios.get('http://localhost/api/products')
-//     setProducts(res.data)
-// }
-
+import Categories from "./pages/Categories";
+import Home from "./pages/Home";
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Products />} />
+        <Route path="/" element={<Home />} />
         <Route path="/products" element={<Products />} />
         <Route path="/categories" element={<Categories />} />
       </Routes>
